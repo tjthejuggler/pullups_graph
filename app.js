@@ -106,10 +106,33 @@ function getMonth(date) {
     return date.substring(0, 7); // YYYY-MM
 }
 
+// Find the highest session
+function findHighestSession() {
+    let maxCount = 0;
+    let maxInfo = null;
+    
+    pullupsData.forEach((entry, index) => {
+        if (entry.count > maxCount) {
+            maxCount = entry.count;
+            maxInfo = {
+                count: entry.count,
+                date: entry.date,
+                time: entry.time,
+                index: index
+            };
+        }
+    });
+    
+    return maxInfo;
+}
+
 // Update the chart
 function updateChart() {
     const dailyTotals = getDailyTotals();
     const dates = Object.keys(dailyTotals).sort();
+    
+    // Find the highest session
+    const highestSession = findHighestSession();
     
     // Prepare datasets for the chart
     const dailyTotalsData = dates.map(date => dailyTotals[date].total);
@@ -118,22 +141,162 @@ function updateChart() {
     const sessionDatasets = [];
     const maxSessionsPerDay = Math.max(...Object.values(dailyTotals).map(d => d.sessions.length));
     
+    // Define base colors: red, orange, green, blue, yellow, pink, gray
+    const baseColors = [
+        { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(220, 38, 38)' },      // red
+        { bg: 'rgba(249, 115, 22, 0.7)', border: 'rgb(234, 88, 12)' },     // orange
+        { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgb(22, 163, 74)' },      // green
+        { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgb(37, 99, 235)' },     // blue
+        { bg: 'rgba(234, 179, 8, 0.7)', border: 'rgb(202, 138, 4)' },      // yellow
+        { bg: 'rgba(236, 72, 153, 0.7)', border: 'rgb(219, 39, 119)' },    // pink
+        { bg: 'rgba(156, 163, 175, 0.7)', border: 'rgb(107, 114, 128)' }   // gray
+    ];
+    
+    // Define dot colors (slightly darker versions for patterns)
+    const dotColors = [
+        'rgb(185, 28, 28)',   // dark red
+        'rgb(194, 65, 12)',   // dark orange
+        'rgb(21, 128, 61)',   // dark green
+        'rgb(29, 78, 216)',   // dark blue
+        'rgb(161, 98, 7)',    // dark yellow
+        'rgb(190, 24, 93)',   // dark pink
+        'rgb(75, 85, 99)'     // dark gray
+    ];
+    
+    // Function to get color for session index
+    function getSessionColor(index) {
+        // First 7 sessions: solid colors
+        if (index < 7) {
+            return baseColors[index];
+        }
+        
+        // After that: base color with dots
+        // Pattern: red+dots, orange+dots, green+dots, etc.
+        const baseIndex = Math.floor((index - 7) / 7) % 7;
+        const dotIndex = (index - 7) % 7;
+        
+        return {
+            bg: baseColors[baseIndex].bg,
+            border: dotColors[dotIndex]
+        };
+    }
+    
     for (let i = 0; i < maxSessionsPerDay; i++) {
         const sessionData = dates.map(date => {
             const sessions = dailyTotals[date].sessions;
             return sessions[i] ? sessions[i].count : null;
         });
         
+        const colors = getSessionColor(i);
+        
         sessionDatasets.push({
             label: `Session ${i + 1}`,
             data: sessionData,
-            backgroundColor: `hsla(${(i * 60) % 360}, 70%, 60%, 0.7)`,
-            borderColor: `hsla(${(i * 60) % 360}, 70%, 50%, 1)`,
+            backgroundColor: colors.bg,
+            borderColor: colors.border,
             borderWidth: 2,
             borderRadius: 6,
             stack: 'sessions'
         });
     }
+    
+    // Find the date with highest daily total
+    let highestDayTotal = 0;
+    let highestDayIndex = -1;
+    dates.forEach((date, index) => {
+        if (dailyTotals[date].total > highestDayTotal) {
+            highestDayTotal = dailyTotals[date].total;
+            highestDayIndex = index;
+        }
+    });
+    
+    // Trophy plugin to draw trophy on highest session and highest day
+    const trophyPlugin = {
+        id: 'trophyPlugin',
+        afterDatasetsDraw: function(chart) {
+            if (!highestSession) {
+                console.log('No highest session found');
+                return;
+            }
+            
+            const ctx = chart.ctx;
+            
+            // Find the bar corresponding to the highest session
+            let targetDatasetIndex = -1;
+            let targetIndex = -1;
+            
+            // Map the highest session to its position in the chart
+            dates.forEach((date, dateIndex) => {
+                const sessions = dailyTotals[date].sessions;
+                sessions.forEach((session, sessionIndex) => {
+                    if (session.count === highestSession.count &&
+                        session.time === highestSession.time &&
+                        date === highestSession.date) {
+                        targetDatasetIndex = sessionIndex;
+                        targetIndex = dateIndex;
+                    }
+                });
+            });
+            
+            console.log('Trophy target:', { targetDatasetIndex, targetIndex, highestSession });
+            
+            // Draw trophy on highest session bar
+            if (targetDatasetIndex >= 0 && targetIndex >= 0) {
+                const datasetMeta = chart.getDatasetMeta(targetDatasetIndex);
+                if (datasetMeta && datasetMeta.data[targetIndex]) {
+                    const targetBar = datasetMeta.data[targetIndex];
+                    
+                    // Position trophy in the center of the bar segment
+                    const x = targetBar.x;
+                    // Calculate the middle of the bar segment
+                    const barHeight = targetBar.base - targetBar.y;
+                    const y = targetBar.y + (barHeight / 2);
+                    
+                    console.log('Drawing trophy at:', { x, y, barY: targetBar.y, barBase: targetBar.base, barHeight });
+                    
+                    ctx.save();
+                    ctx.font = 'bold 24px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    // Add a subtle glow effect
+                    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                    ctx.shadowBlur = 15;
+                    ctx.fillText('🏆', x, y);
+                    
+                    ctx.restore();
+                } else {
+                    console.log('Bar element not found');
+                }
+            } else {
+                console.log('Target indices not found');
+            }
+            
+            // Draw smaller trophy next to the date with highest daily total
+            if (highestDayIndex >= 0) {
+                const xScale = chart.scales.x;
+                const yScale = chart.scales.y;
+                
+                // Get the x position of the highest day
+                const xPos = xScale.getPixelForValue(highestDayIndex);
+                // Position to the right of the date label
+                const yPos = yScale.bottom + 15;
+                
+                ctx.save();
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                
+                // Add a subtle glow effect
+                ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+                ctx.shadowBlur = 10;
+                // Position trophy to the right of the date label
+                ctx.fillText('🏆', xPos + 25, yPos);
+                
+                ctx.restore();
+            }
+        }
+    };
     
     const ctx = document.getElementById('pullupsChart').getContext('2d');
     
@@ -240,7 +403,8 @@ function updateChart() {
                     }
                 }
             }
-        }
+        },
+        plugins: [trophyPlugin]
     });
 }
 

@@ -5,6 +5,7 @@ A beautiful and intuitive web application to visualize your daily pullup progres
 ## Features
 
 - **Interactive Stacked Bar Chart**: View all your pullup sessions stacked by day
+- **Trophy Icon on Best Session**: The session with the most pullups is marked with a 🏆 trophy icon directly on the graph
 - **Session-by-Session Breakdown**: Each session is color-coded and displayed separately
 - **Comprehensive Statistics Panel**:
   - Today's total pullups
@@ -90,4 +91,4 @@ You can easily customize the appearance by editing `style.css`:
 
 ---
 
-*Last updated: 2025-11-26*
+*Last updated: 2025-11-27*
