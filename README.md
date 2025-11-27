@@ -21,7 +21,21 @@ A beautiful and intuitive web application to visualize your daily pullup progres
 
 ## How to Use
 
-### Recommended: Run the Custom Server
+### Quick Start (Recommended)
+
+Use the convenience script to start the server and open your browser in one command:
+
+```bash
+/home/twain/Projects/pullups_graph/start_pullups_graph.sh
+```
+
+This script:
+- Checks if the server is already running
+- Starts the server if needed
+- Opens your browser to `http://localhost:8000`
+- Can be run from anywhere on your system (perfect for hotkeys!)
+
+### Manual Start
 
 1. Open a terminal in the project directory
 2. Run the server:
@@ -66,10 +80,12 @@ Each line represents:
 
 ```
 pullups_graph/
-├── index.html      # Main HTML structure
-├── style.css       # Beautiful gradient styling
-├── app.js          # Data parsing and chart logic
-└── README.md       # This file
+├── index.html                # Main HTML structure
+├── style.css                 # Beautiful gradient styling
+├── app.js                    # Data parsing and chart logic
+├── serve.py                  # Python server for data access
+├── start_pullups_graph.sh    # Convenience script to start & open
+└── README.md                 # This file
 ```
 
 ## Statistics Explained
@@ -89,6 +105,22 @@ You can easily customize the appearance by editing `style.css`:
 - Modify chart colors in `app.js` (search for `hsla` values)
 - Adjust spacing, fonts, and sizes to your preference
 
+## Setting Up a Hotkey
+
+To bind the script to a hotkey in your desktop environment:
+
+**GNOME/Ubuntu:**
+1. Go to Settings → Keyboard → Keyboard Shortcuts
+2. Click "+" to add a custom shortcut
+3. Name: "Open Pullups Graph"
+4. Command: `/home/twain/Projects/pullups_graph/start_pullups_graph.sh`
+5. Set your preferred key combination
+
+**KDE Plasma:**
+1. System Settings → Shortcuts → Custom Shortcuts
+2. Edit → New → Global Shortcut → Command/URL
+3. Set the command and your preferred key combination
+
 ---
 
-*Last updated: 2025-11-27*
+*Last updated: 2025-11-27 10:59 UTC*
