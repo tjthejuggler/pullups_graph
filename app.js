@@ -327,14 +327,7 @@ function updateChart() {
                     padding: 20
                 },
                 legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
+                    display: false
                 },
                 tooltip: {
                     callbacks: {
