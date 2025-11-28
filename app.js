@@ -15,8 +15,8 @@ function parsePullupsData(content) {
     const data = [];
     
     lines.forEach(line => {
-        // Match regular, wide pullups (w suffix), chin-ups (c suffix), and pull-ups (p suffix)
-        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+>\s+(\d+)([wcp])?/);
+        // Match regular, wide pullups (w suffix), chin-ups (c suffix), pull-ups (p suffix), and dips (d suffix)
+        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+>\s+(\d+)([wcpd])?/);
         if (match) {
             const [, date, time, count, suffix] = match;
             data.push({
@@ -26,7 +26,8 @@ function parsePullupsData(content) {
                 count: parseInt(count),
                 isWide: suffix === 'w',
                 isChinup: suffix === 'c',
-                isPullup: suffix === 'p'
+                isPullup: suffix === 'p',
+                isDips: suffix === 'd'
             });
         }
     });
@@ -134,8 +135,8 @@ function useSampleData() {
         { date: '2025-11-26', time: '15:36:45', datetime: '2025-11-26 15:36:45', count: 5, isWide: false, isChinup: false, isPullup: false }
     ];
     
-    updateChart();
-    updateStatistics();
+    updatePullupsChart();
+    updatePullupsStatistics();
 }
 
 // Group data by date and calculate daily totals
@@ -155,7 +156,8 @@ function getDailyTotals() {
             count: entry.count,
             isWide: entry.isWide,
             isChinup: entry.isChinup,
-            isPullup: entry.isPullup
+            isPullup: entry.isPullup,
+            isDips: entry.isDips
         });
     });
     
@@ -241,6 +243,27 @@ function findHighestPullupSession() {
     return maxInfo;
 }
 
+// Find the highest dips session
+function findHighestDipsSession() {
+    let maxCount = 0;
+    let maxInfo = null;
+    
+    pullupsData.forEach((entry, index) => {
+        if (entry.isDips && entry.count > maxCount) {
+            maxCount = entry.count;
+            maxInfo = {
+                count: entry.count,
+                date: entry.date,
+                time: entry.time,
+                index: index,
+                isDips: true
+            };
+        }
+    });
+    
+    return maxInfo;
+}
+
 // Update the pullups chart
 function updatePullupsChart() {
     const dailyTotals = getDailyTotals();
@@ -258,7 +281,8 @@ function updatePullupsChart() {
         regular: { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgb(37, 99, 235)' },    // blue for regular
         wide: { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(220, 38, 38)' },        // red for wide
         chinup: { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgb(22, 163, 74)' },      // green for chin-ups
-        pullup: { bg: 'rgba(249, 115, 22, 0.7)', border: 'rgb(234, 88, 12)' }      // orange for pull-ups
+        pullup: { bg: 'rgba(249, 115, 22, 0.7)', border: 'rgb(234, 88, 12)' },     // orange for pull-ups
+        dips: { bg: 'rgba(168, 85, 247, 0.7)', border: 'rgb(147, 51, 234)' }       // purple for dips
     };
     
     // Function to get color based on pullup type
@@ -269,6 +293,8 @@ function updatePullupsChart() {
             return pullupTypeColors.chinup;
         } else if (session.isPullup) {
             return pullupTypeColors.pullup;
+        } else if (session.isDips) {
+            return pullupTypeColors.dips;
         } else {
             return pullupTypeColors.regular;
         }
@@ -322,6 +348,7 @@ function updatePullupsChart() {
     const highestWideSession = findHighestWideSession();
     const highestChinupSession = findHighestChinupSession();
     const highestPullupSession = findHighestPullupSession();
+    const highestDipsSession = findHighestDipsSession();
     
     // Trophy plugin to draw trophy on highest session, highest day, and grip type trophies
     const trophyPlugin = {
@@ -374,6 +401,21 @@ function updatePullupsChart() {
                             session.count === highestPullupSession.count &&
                             session.time === highestPullupSession.time &&
                             date === highestPullupSession.date) {
+                            ctx.save();
+                            ctx.font = 'bold 12px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'top';
+                            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                            ctx.shadowBlur = 8;
+                            ctx.fillText('🏆', x, y);
+                            ctx.restore();
+                        }
+                        
+                        // Trophy for highest dips session
+                        if (session.isDips && highestDipsSession &&
+                            session.count === highestDipsSession.count &&
+                            session.time === highestDipsSession.time &&
+                            date === highestDipsSession.date) {
                             ctx.save();
                             ctx.font = 'bold 12px Arial';
                             ctx.textAlign = 'center';
@@ -470,6 +512,7 @@ function updatePullupsChart() {
                             if (session.isWide) type = 'Wide';
                             else if (session.isChinup) type = 'Chin-up';
                             else if (session.isPullup) type = 'Pull-up';
+                            else if (session.isDips) type = 'Dips';
                             
                             return `Session ${sessionNum} (${time}): ${count} ${type}`;
                         }
@@ -666,6 +709,21 @@ function updatePullupsStatistics() {
     if (pullupSessionElement) {
         pullupSessionElement.textContent = highestPullupSession || '-';
         pullupSessionElement.parentElement.setAttribute('data-tooltip', highestPullupSessionDate || '');
+    }
+    
+    // Highest dips session
+    let highestDipsSession = 0;
+    let highestDipsSessionDate = '';
+    pullupsData.forEach(entry => {
+        if (entry.isDips && entry.count > highestDipsSession) {
+            highestDipsSession = entry.count;
+            highestDipsSessionDate = entry.datetime;
+        }
+    });
+    const dipsSessionElement = document.getElementById('highestDipsSession');
+    if (dipsSessionElement) {
+        dipsSessionElement.textContent = highestDipsSession || '-';
+        dipsSessionElement.parentElement.setAttribute('data-tooltip', highestDipsSessionDate || '');
     }
 }
 

@@ -13,13 +13,14 @@ This application now features **two separate tracking tabs**:
 ### 💪 Pullups Tracker
 
 - **Interactive Stacked Bar Chart**: View all your pullup sessions stacked by day
-- **Multiple Grip Types Support**: Track different grip variations with color-coded bars
+- **Multiple Exercise Types Support**: Track different exercise variations with color-coded bars
   - **Wide-grip pullups** ('w' suffix): Red bars
   - **Chin-ups** ('c' suffix): Green bars
   - **Pull-ups** ('p' suffix): Orange bars
-  - Best session for each grip type gets its own trophy 🏆 on the chart
-  - All grip types count toward daily/weekly/monthly totals
-  - Separate statistics tracked for each grip type
+  - **Dips** ('d' suffix): Purple bars
+  - Best session for each exercise type gets its own trophy 🏆 on the chart
+  - All exercise types count toward daily/weekly/monthly totals
+  - Separate statistics tracked for each exercise type
 - **Session-by-Session Breakdown**: Each session is displayed separately with colors indicating the grip type
 - **Two-Column Statistics Panel**:
   - **Column 1 - Overall Stats**:
@@ -33,6 +34,7 @@ This application now features **two separate tracking tabs**:
     - Best wide session (red background)
     - Best chin-up session (green background)
     - Best pull-up session (orange background)
+    - Best dips session (purple background)
 - **Hover Tooltips**: Hover over any stat card to see the exact date or date range
 - **Responsive Design**: Works beautifully on desktop and mobile devices
 - **Auto-Updates**: Reads the latest data from your Pullups.md file each time you load the page
@@ -112,14 +114,15 @@ Each line represents:
 - Time (HH:MM:SS)
 - `>` separator
 - Number of pullups in that session
-- Required grip type suffix:
+- Required exercise type suffix:
   - `w` = wide-grip pullups (e.g., `2w` means 2 wide pullups)
   - `c` = chin-ups (e.g., `5c` means 5 chin-ups)
   - `p` = pull-ups (e.g., `8p` means 8 pull-ups)
+  - `d` = dips (e.g., `6d` means 6 dips)
 
-### Grip Types
+### Exercise Types
 
-All grip types are tracked separately but still count toward your daily, weekly, and monthly totals:
+All exercise types are tracked separately but still count toward your daily, weekly, and monthly totals:
 
 **Wide-grip pullups (w):**
 ```
@@ -142,14 +145,22 @@ All grip types are tracked separately but still count toward your daily, weekly,
 - Standard overhand/pronated grip (palms facing away)
 - Balanced upper body workout
 
-Each grip type will:
+**Dips (d):**
+```
+2025-11-27 15:30:00 > 6d
+```
+- Parallel bar dips
+- Emphasizes triceps, chest, and shoulders
+
+Each exercise type will:
 - Count toward your daily/weekly/monthly totals
 - Display with a distinct color on the graph:
   - Wide: Red
   - Chin-ups: Green
   - Pull-ups: Orange
+  - Dips: Purple
 - Track separately for "Best [Type] Session" statistics
-- Display a trophy 🏆 on the chart if it's your current record for that grip type
+- Display a trophy 🏆 on the chart if it's your current record for that exercise type
 
 ### Chess Puzzle Rush Data Format
 
@@ -228,6 +239,7 @@ Each card is color-coded to match the chart colors, serving as both a legend and
 - **Best Wide** (Red): The single wide-grip session with the most pullups
 - **Best Chin-up** (Green): The single chin-up session with the most pullups
 - **Best Pull-up** (Orange): The single pull-up session with the most pullups
+- **Best Dips** (Purple): The single dips session with the most reps
 
 ### Chess Statistics Explained
 
@@ -272,6 +284,12 @@ To bind the script to a hotkey in your desktop environment:
 
 ## Recent Updates
 
+### 2025-11-28 20:46 UTC
+- ✨ Added Dips exercise tracking
+- 💜 Purple color scheme for dips in chart and statistics
+- 🏆 Trophy system for dips records
+- 📊 Dips count toward daily/weekly/monthly totals
+
 ### 2025-11-28 10:51 UTC
 - ✨ Added Chess Puzzle Rush tracking tab
 - 🎨 Implemented tab navigation system
@@ -285,4 +303,4 @@ To bind the script to a hotkey in your desktop environment:
 
 ---
 
-*Last updated: 2025-11-28 10:51 UTC*
+*Last updated: 2025-11-28 20:46 UTC*

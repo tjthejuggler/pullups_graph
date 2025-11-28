@@ -130,6 +130,11 @@ header h1 {
     border: 2px solid rgb(249, 115, 22);
 }
 
+.stat-card.type-dips {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.3) 100%);
+    border: 2px solid rgb(168, 85, 247);
+}
+
 .stat-label {
     font-size: 0.7rem !important;
     color: #555;
