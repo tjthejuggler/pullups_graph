@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pullups Progress Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Progress Tracker</title>
+    <link rel="stylesheet" href="style.css?v=4">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>💪 Pullups Progress Tracker</h1>
-            <p class="subtitle">Track your daily pullup sessions and progress</p>
+            <h1>📊 Record Progress</h1>
+            <p class="subtitle" id="subtitle">Track your daily pullup sessions and progress</p>
         </header>
 
-        <div class="main-content">
+        <div class="tabs">
+            <button class="tab-button active" data-tab="pullups">💪 Pullups</button>
+            <button class="tab-button" data-tab="chess">♟️ Chess Puzzle Rush</button>
+        </div>
+
+        <div class="main-content" id="pullups-content">
             <div class="chart-section">
                 <div class="chart-container">
                     <canvas id="pullupsChart"></canvas>
@@ -24,44 +29,123 @@
             <div class="stats-panel">
                 <h2>📊 Statistics</h2>
                 
-                <div class="stat-card current" data-tooltip="">
-                    <div class="stat-label">Today's Total</div>
-                    <div class="stat-value" id="todayTotal">-</div>
-                </div>
+                <div class="stats-columns">
+                    <div class="stats-column">
+                        <div class="stat-card current" data-tooltip="">
+                            <div class="stat-label">Today's Total</div>
+                            <div class="stat-value" id="todayTotal">-</div>
+                        </div>
 
-                <div class="stat-card highlight" data-tooltip="">
-                    <div class="stat-label">Highest Day Ever</div>
-                    <div class="stat-value" id="highestDay">-</div>
-                </div>
+                        <div class="stat-card highlight" data-tooltip="">
+                            <div class="stat-label">Highest Day Ever</div>
+                            <div class="stat-value" id="highestDay">-</div>
+                        </div>
 
-                <div class="stat-card" data-tooltip="">
-                    <div class="stat-label">This Week</div>
-                    <div class="stat-value" id="thisWeek">-</div>
-                </div>
+                        <div class="stat-card" data-tooltip="">
+                            <div class="stat-label">This Week</div>
+                            <div class="stat-value" id="thisWeek">-</div>
+                        </div>
 
-                <div class="stat-card highlight" data-tooltip="">
-                    <div class="stat-label">Highest Week Ever</div>
-                    <div class="stat-value" id="highestWeek">-</div>
-                </div>
+                        <div class="stat-card highlight" data-tooltip="">
+                            <div class="stat-label">Highest Week Ever</div>
+                            <div class="stat-value" id="highestWeek">-</div>
+                        </div>
 
-                <div class="stat-card" data-tooltip="">
-                    <div class="stat-label">This Month</div>
-                    <div class="stat-value" id="thisMonth">-</div>
-                </div>
+                        <div class="stat-card" data-tooltip="">
+                            <div class="stat-label">This Month</div>
+                            <div class="stat-value" id="thisMonth">-</div>
+                        </div>
 
-                <div class="stat-card highlight" data-tooltip="">
-                    <div class="stat-label">Highest Month Ever</div>
-                    <div class="stat-value" id="highestMonth">-</div>
-                </div>
+                        <div class="stat-card highlight" data-tooltip="">
+                            <div class="stat-label">Highest Month Ever</div>
+                            <div class="stat-value" id="highestMonth">-</div>
+                        </div>
+                    </div>
 
-                <div class="stat-card special" data-tooltip="">
-                    <div class="stat-label">🏆 Best Session</div>
-                    <div class="stat-value" id="highestSession">-</div>
+                    <div class="stats-column">
+                        <div class="stat-card type-wide" data-tooltip="">
+                            <div class="stat-label">🏆 Best Wide</div>
+                            <div class="stat-value" id="highestWideSession">-</div>
+                        </div>
+
+                        <div class="stat-card type-chinup" data-tooltip="">
+                            <div class="stat-label">🏆 Best Chin-up</div>
+                            <div class="stat-value" id="highestChinupSession">-</div>
+                        </div>
+
+                        <div class="stat-card type-pullup" data-tooltip="">
+                            <div class="stat-label">🏆 Best Pull-up</div>
+                            <div class="stat-value" id="highestPullupSession">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content hidden" id="chess-content">
+            <div class="chart-section">
+                <div class="chart-container">
+                    <canvas id="chessChart"></canvas>
+                </div>
+            </div>
+
+            <div class="stats-panel">
+                <h2>📊 Statistics</h2>
+                
+                <div class="stats-columns">
+                    <div class="stats-column">
+                        <div class="stat-card current" data-tooltip="">
+                            <div class="stat-label">Today's Total</div>
+                            <div class="stat-value" id="chessTodayTotal">-</div>
+                        </div>
+
+                        <div class="stat-card highlight" data-tooltip="">
+                            <div class="stat-label">Highest Day Ever</div>
+                            <div class="stat-value" id="chessHighestDay">-</div>
+                        </div>
+
+                        <div class="stat-card" data-tooltip="">
+                            <div class="stat-label">This Week</div>
+                            <div class="stat-value" id="chessThisWeek">-</div>
+                        </div>
+
+                        <div class="stat-card highlight" data-tooltip="">
+                            <div class="stat-label">Highest Week Ever</div>
+                            <div class="stat-value" id="chessHighestWeek">-</div>
+                        </div>
+
+                        <div class="stat-card" data-tooltip="">
+                            <div class="stat-label">This Month</div>
+                            <div class="stat-value" id="chessThisMonth">-</div>
+                        </div>
+
+                        <div class="stat-card highlight" data-tooltip="">
+                            <div class="stat-label">Highest Month Ever</div>
+                            <div class="stat-value" id="chessHighestMonth">-</div>
+                        </div>
+                    </div>
+
+                    <div class="stats-column">
+                        <div class="stat-card chess-3m" data-tooltip="">
+                            <div class="stat-label">🏆 Best 3-Minute</div>
+                            <div class="stat-value" id="chess3mRecord">-</div>
+                        </div>
+
+                        <div class="stat-card chess-5m" data-tooltip="">
+                            <div class="stat-label">🏆 Best 5-Minute</div>
+                            <div class="stat-value" id="chess5mRecord">-</div>
+                        </div>
+
+                        <div class="stat-card chess-survival" data-tooltip="">
+                            <div class="stat-label">🏆 Best Survival</div>
+                            <div class="stat-value" id="chessSurvivalRecord">-</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=9"></script>
 </body>
 </html>

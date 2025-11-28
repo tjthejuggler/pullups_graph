@@ -11,6 +11,7 @@ from urllib.parse import urlparse, parse_qs
 
 PORT = 8000
 PULLUPS_FILE = '/home/twain/noteVault/Pullups.md'
+CHESS_FILE = '/home/twain/noteVault/PuzzleRushApnea.md'
 
 class PullupsHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -41,6 +42,26 @@ class PullupsHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(f'Error reading file: {str(e)}'.encode())
+        # Check if requesting the chess data
+        elif self.path == '/api/chess':
+            try:
+                with open(CHESS_FILE, 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(content.encode())
+            except FileNotFoundError:
+                self.send_response(404)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'PuzzleRushApnea.md file not found')
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(f'Error reading file: {str(e)}'.encode())
         else:
             # Serve regular files
             super().do_GET()
@@ -51,8 +72,9 @@ class PullupsHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     with socketserver.TCPServer(("", PORT), PullupsHandler) as httpd:
-        print(f"🚀 Pullups Graph Server running at http://localhost:{PORT}")
-        print(f"📊 Reading data from: {PULLUPS_FILE}")
+        print(f"🚀 Progress Tracker Server running at http://localhost:{PORT}")
+        print(f"📊 Reading pullups data from: {PULLUPS_FILE}")
+        print(f"♟️  Reading chess data from: {CHESS_FILE}")
         print(f"Press Ctrl+C to stop the server")
         try:
             httpd.serve_forever()
