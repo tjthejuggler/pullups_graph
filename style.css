@@ -264,6 +264,11 @@ header h1 {
     border: 2px solid rgb(75, 0, 130);
 }
 
+.stat-card.chess-puzzle-storm {
+    background: linear-gradient(135deg, rgba(220, 20, 60, 0.2) 0%, rgba(178, 34, 34, 0.3) 100%);
+    border: 2px solid rgb(220, 20, 60);
+}
+
 /* Chess theme for chess tab */
 #chess-content .chart-section {
     background: linear-gradient(135deg, #f5f5f0 0%, #e8e8e0 100%);

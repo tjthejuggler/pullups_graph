@@ -44,8 +44,8 @@ function parseChessData(content) {
     console.log('Chess data lines:', lines);
     
     lines.forEach(line => {
-        // Match format: 2025-11-28 10:10:59 m3 11 or 3m 11 or s 11
-        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(m3|m5|3m|5m|s)\s+(\d+)/);
+        // Match format: 2025-11-28 10:10:59 m3 11 or 3m 11 or s 11 or ps 11
+        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+(m3|m5|3m|5m|s|ps)\s+(\d+)/);
         console.log('Line:', line, 'Match:', match);
         if (match) {
             const [, date, time, modeRaw, count] = match;
@@ -59,10 +59,11 @@ function parseChessData(content) {
                 time: time,
                 datetime: `${date} ${time}`,
                 count: parseInt(count),
-                mode: mode, // '3m', '5m', or 's'
+                mode: mode, // '3m', '5m', 's', or 'ps'
                 is3m: mode === '3m',
                 is5m: mode === '5m',
-                isSurvival: mode === 's'
+                isSurvival: mode === 's',
+                isPuzzleStorm: mode === 'ps'
             };
             console.log('Parsed chess entry:', entry);
             data.push(entry);
@@ -750,7 +751,8 @@ function getChessDailyTotals() {
             mode: entry.mode,
             is3m: entry.is3m,
             is5m: entry.is5m,
-            isSurvival: entry.isSurvival
+            isSurvival: entry.isSurvival,
+            isPuzzleStorm: entry.isPuzzleStorm
         });
     });
     
@@ -770,7 +772,8 @@ function updateChessChart() {
     const chessModeColors = {
         '3m': { bg: 'rgba(139, 69, 19, 0.7)', border: 'rgb(101, 50, 13)' },      // brown for 3m
         '5m': { bg: 'rgba(218, 165, 32, 0.7)', border: 'rgb(184, 134, 11)' },    // goldenrod for 5m
-        's': { bg: 'rgba(75, 0, 130, 0.7)', border: 'rgb(54, 0, 94)' }           // indigo for survival
+        's': { bg: 'rgba(75, 0, 130, 0.7)', border: 'rgb(54, 0, 94)' },          // indigo for survival
+        'ps': { bg: 'rgba(220, 20, 60, 0.7)', border: 'rgb(178, 34, 34)' }       // crimson for puzzle storm
     };
     
     function getColorForChessSession(session) {
@@ -824,7 +827,8 @@ function updateChessChart() {
     const records = {
         '3m': { count: 0, date: '', time: '' },
         '5m': { count: 0, date: '', time: '' },
-        's': { count: 0, date: '', time: '' }
+        's': { count: 0, date: '', time: '' },
+        'ps': { count: 0, date: '', time: '' }
     };
     
     chessData.forEach(entry => {
@@ -941,8 +945,9 @@ function updateChessChart() {
                             const session = dailyTotals[date].sessions[context.datasetIndex];
                             const time = session.time;
                             
-                            let modeName = session.mode === '3m' ? '3-Minute' : 
-                                          session.mode === '5m' ? '5-Minute' : 'Survival';
+                            let modeName = session.mode === '3m' ? '3-Minute' :
+                                          session.mode === '5m' ? '5-Minute' :
+                                          session.mode === 's' ? 'Survival' : 'Puzzle Storm';
                             
                             return `Session ${sessionNum} (${time}): ${count} ${modeName}`;
                         }
@@ -1103,6 +1108,8 @@ function updateChessStatistics() {
     let record5mDate = '';
     let recordSurvival = 0;
     let recordSurvivalDate = '';
+    let recordPuzzleStorm = 0;
+    let recordPuzzleStormDate = '';
     
     chessData.forEach(entry => {
         if (entry.is3m && entry.count > record3m) {
@@ -1117,6 +1124,10 @@ function updateChessStatistics() {
             recordSurvival = entry.count;
             recordSurvivalDate = entry.datetime;
         }
+        if (entry.isPuzzleStorm && entry.count > recordPuzzleStorm) {
+            recordPuzzleStorm = entry.count;
+            recordPuzzleStormDate = entry.datetime;
+        }
     });
     
     document.getElementById('chess3mRecord').textContent = record3m || '-';
@@ -1127,6 +1138,9 @@ function updateChessStatistics() {
     
     document.getElementById('chessSurvivalRecord').textContent = recordSurvival || '-';
     document.querySelector('#chessSurvivalRecord').parentElement.setAttribute('data-tooltip', recordSurvivalDate || '');
+    
+    document.getElementById('chessPuzzleStormRecord').textContent = recordPuzzleStorm || '-';
+    document.querySelector('#chessPuzzleStormRecord').parentElement.setAttribute('data-tooltip', recordPuzzleStormDate || '');
 }
 
 // Tab switching functionality

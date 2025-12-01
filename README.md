@@ -46,6 +46,7 @@ This application now features **two separate tracking tabs**:
   - **3-Minute Rush** (m3 or 3m): Brown bars
   - **5-Minute Rush** (m5 or 5m): Goldenrod bars
   - **Survival Mode** (s): Indigo bars
+  - **Puzzle Storm** (ps): Crimson bars
   - Best session for each mode gets its own trophy 🏆 on the chart
 - **Session-by-Session Breakdown**: Each session is displayed separately with colors indicating the mode
 - **Two-Column Statistics Panel**:
@@ -60,6 +61,7 @@ This application now features **two separate tracking tabs**:
     - Best 3-Minute session (brown background)
     - Best 5-Minute session (goldenrod background)
     - Best Survival session (indigo background)
+    - Best Puzzle Storm session (crimson background)
 - **Chess-Themed Design**: Beautiful chess aesthetic with chess piece decorations
 - **Auto-Updates**: Reads the latest data from your PuzzleRushApnea.md file each time you load the page
 
@@ -170,6 +172,7 @@ The application reads from `/home/twain/noteVault/PuzzleRushApnea.md` with the f
 2025-11-28 10:10:59 m3 11
 2025-11-28 10:15:30 m5 15
 2025-11-28 10:20:45 s 23
+2025-11-28 10:25:30 ps 18
 ```
 
 Each line represents:
@@ -179,6 +182,7 @@ Each line represents:
   - `m3` or `3m` = 3-minute puzzle rush
   - `m5` or `5m` = 5-minute puzzle rush
   - `s` = survival mode
+  - `ps` = puzzle storm
 - Number of puzzles solved in that session
 
 **Example entries:**
@@ -186,6 +190,7 @@ Each line represents:
 2025-11-28 10:10:59 m3 11    # Solved 11 puzzles in 3-minute mode
 2025-11-28 10:15:30 m5 15    # Solved 15 puzzles in 5-minute mode
 2025-11-28 10:20:45 s 23     # Solved 23 puzzles in survival mode
+2025-11-28 10:25:30 ps 18    # Solved 18 puzzles in puzzle storm mode
 ```
 
 Each mode will:
@@ -194,6 +199,7 @@ Each mode will:
   - 3-Minute: Brown
   - 5-Minute: Goldenrod
   - Survival: Indigo
+  - Puzzle Storm: Crimson
 - Track separately for "Best [Mode] Session" statistics
 - Display a trophy 🏆 on the chart if it's your current record for that mode
 
@@ -256,6 +262,7 @@ Each card is color-coded to match the chart colors:
 - **Best 3-Minute** (Brown): The single 3-minute session with the most puzzles solved
 - **Best 5-Minute** (Goldenrod): The single 5-minute session with the most puzzles solved
 - **Best Survival** (Indigo): The single survival session with the most puzzles solved
+- **Best Puzzle Storm** (Crimson): The single puzzle storm session with the most puzzles solved
 
 ## Customization
 
@@ -284,6 +291,12 @@ To bind the script to a hotkey in your desktop environment:
 
 ## Recent Updates
 
+### 2025-11-30 15:13 UTC
+- ✨ Added Puzzle Storm tracking to Chess tab
+- 🔴 Crimson color scheme for puzzle storm in chart and statistics
+- 🏆 Trophy system for puzzle storm records
+- 📊 Puzzle storm counts toward daily/weekly/monthly totals
+
 ### 2025-11-28 20:46 UTC
 - ✨ Added Dips exercise tracking
 - 💜 Purple color scheme for dips in chart and statistics
@@ -303,4 +316,4 @@ To bind the script to a hotkey in your desktop environment:
 
 ---
 
-*Last updated: 2025-11-28 20:46 UTC*
+*Last updated: 2025-11-30 15:13 UTC*
