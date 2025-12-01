@@ -291,6 +291,12 @@ To bind the script to a hotkey in your desktop environment:
 
 ## Recent Updates
 
+### 2025-12-01 11:02 UTC
+- ⭐ Added previous record tracking with gray stars
+- 🏆 Current records show golden trophy, previous records show gray star
+- 📊 Helps visualize how long since breaking a record in any category
+- ✨ Applied to both pullups and chess puzzle rush graphs
+
 ### 2025-11-30 15:13 UTC
 - ✨ Added Puzzle Storm tracking to Chess tab
 - 🔴 Crimson color scheme for puzzle storm in chart and statistics
@@ -316,4 +322,4 @@ To bind the script to a hotkey in your desktop environment:
 
 ---
 
-*Last updated: 2025-11-30 15:13 UTC*
+*Last updated: 2025-12-01 11:02 UTC*

@@ -181,88 +181,137 @@ function getMonth(date) {
 }
 
 
-// Find the highest wide session
+// Find the highest wide session and all previous records
 function findHighestWideSession() {
     let maxCount = 0;
     let maxInfo = null;
+    const previousRecords = [];
     
-    pullupsData.forEach((entry, index) => {
-        if (entry.isWide && entry.count > maxCount) {
-            maxCount = entry.count;
-            maxInfo = {
-                count: entry.count,
-                date: entry.date,
-                time: entry.time,
-                index: index,
-                isWide: true
-            };
+    // Sort by datetime to process chronologically
+    const sortedData = [...pullupsData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedData.forEach((entry, index) => {
+        if (entry.isWide) {
+            if (entry.count > maxCount) {
+                // Current record becomes previous record
+                if (maxInfo) {
+                    previousRecords.push({...maxInfo});
+                }
+                maxCount = entry.count;
+                maxInfo = {
+                    count: entry.count,
+                    date: entry.date,
+                    time: entry.time,
+                    index: index,
+                    isWide: true
+                };
+            }
         }
     });
     
-    return maxInfo;
+    console.log('Wide records:', { current: maxInfo, previous: previousRecords });
+    return { current: maxInfo, previous: previousRecords };
 }
 
-// Find the highest chin-up session
+// Find the highest chin-up session and all previous records
 function findHighestChinupSession() {
     let maxCount = 0;
     let maxInfo = null;
+    const previousRecords = [];
     
-    pullupsData.forEach((entry, index) => {
-        if (entry.isChinup && entry.count > maxCount) {
-            maxCount = entry.count;
-            maxInfo = {
-                count: entry.count,
-                date: entry.date,
-                time: entry.time,
-                index: index,
-                isChinup: true
-            };
+    // Sort by datetime to process chronologically
+    const sortedData = [...pullupsData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedData.forEach((entry, index) => {
+        if (entry.isChinup) {
+            if (entry.count > maxCount) {
+                // Current record becomes previous record
+                if (maxInfo) {
+                    previousRecords.push({...maxInfo});
+                }
+                maxCount = entry.count;
+                maxInfo = {
+                    count: entry.count,
+                    date: entry.date,
+                    time: entry.time,
+                    index: index,
+                    isChinup: true
+                };
+            }
         }
     });
     
-    return maxInfo;
+    return { current: maxInfo, previous: previousRecords };
 }
 
-// Find the highest pull-up session
+// Find the highest pull-up session and all previous records
 function findHighestPullupSession() {
     let maxCount = 0;
     let maxInfo = null;
+    const previousRecords = [];
     
-    pullupsData.forEach((entry, index) => {
-        if (entry.isPullup && entry.count > maxCount) {
-            maxCount = entry.count;
-            maxInfo = {
-                count: entry.count,
-                date: entry.date,
-                time: entry.time,
-                index: index,
-                isPullup: true
-            };
+    // Sort by datetime to process chronologically
+    const sortedData = [...pullupsData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedData.forEach((entry, index) => {
+        if (entry.isPullup) {
+            if (entry.count > maxCount) {
+                // Current record becomes previous record
+                if (maxInfo) {
+                    previousRecords.push({...maxInfo});
+                }
+                maxCount = entry.count;
+                maxInfo = {
+                    count: entry.count,
+                    date: entry.date,
+                    time: entry.time,
+                    index: index,
+                    isPullup: true
+                };
+            }
         }
     });
     
-    return maxInfo;
+    return { current: maxInfo, previous: previousRecords };
 }
 
-// Find the highest dips session
+// Find the highest dips session and all previous records
 function findHighestDipsSession() {
     let maxCount = 0;
     let maxInfo = null;
+    const previousRecords = [];
     
-    pullupsData.forEach((entry, index) => {
-        if (entry.isDips && entry.count > maxCount) {
-            maxCount = entry.count;
-            maxInfo = {
-                count: entry.count,
-                date: entry.date,
-                time: entry.time,
-                index: index,
-                isDips: true
-            };
+    // Sort by datetime to process chronologically
+    const sortedData = [...pullupsData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedData.forEach((entry, index) => {
+        if (entry.isDips) {
+            if (entry.count > maxCount) {
+                // Current record becomes previous record
+                if (maxInfo) {
+                    previousRecords.push({...maxInfo});
+                }
+                maxCount = entry.count;
+                maxInfo = {
+                    count: entry.count,
+                    date: entry.date,
+                    time: entry.time,
+                    index: index,
+                    isDips: true
+                };
+            }
         }
     });
     
-    return maxInfo;
+    return { current: maxInfo, previous: previousRecords };
 }
 
 // Update the pullups chart
@@ -345,11 +394,11 @@ function updatePullupsChart() {
         }
     });
     
-    // Get highest session info for each type
-    const highestWideSession = findHighestWideSession();
-    const highestChinupSession = findHighestChinupSession();
-    const highestPullupSession = findHighestPullupSession();
-    const highestDipsSession = findHighestDipsSession();
+    // Get highest session info for each type (current and previous records)
+    const wideRecords = findHighestWideSession();
+    const chinupRecords = findHighestChinupSession();
+    const pullupRecords = findHighestPullupSession();
+    const dipsRecords = findHighestDipsSession();
     
     // Trophy plugin to draw trophy on highest session, highest day, and grip type trophies
     const trophyPlugin = {
@@ -357,7 +406,15 @@ function updatePullupsChart() {
         afterDatasetsDraw: function(chart) {
             const ctx = chart.ctx;
             
-            // Draw trophies for highest sessions of each type
+            // Helper function to check if session matches a record
+            const matchesRecord = (session, date, record) => {
+                return record &&
+                       session.count === record.count &&
+                       session.time === record.time &&
+                       date === record.date;
+            };
+            
+            // Draw trophies and stars for highest sessions of each type
             dates.forEach((date, dateIndex) => {
                 const sessions = dailyTotals[date].sessions;
                 sessions.forEach((session, sessionIndex) => {
@@ -367,64 +424,104 @@ function updatePullupsChart() {
                         const x = bar.x;
                         const y = bar.y + 8;
                         
-                        // Trophy for highest wide session
-                        if (session.isWide && highestWideSession &&
-                            session.count === highestWideSession.count &&
-                            session.time === highestWideSession.time &&
-                            date === highestWideSession.date) {
-                            ctx.save();
-                            ctx.font = 'bold 12px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'top';
-                            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-                            ctx.shadowBlur = 8;
-                            ctx.fillText('🏆', x, y);
-                            ctx.restore();
+                        // Check for wide grip records
+                        if (session.isWide) {
+                            // Current record - golden trophy
+                            if (matchesRecord(session, date, wideRecords.current)) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                                ctx.shadowBlur = 8;
+                                ctx.fillText('🏆', x, y);
+                                ctx.restore();
+                            }
+                            // Previous records - gray star
+                            else if (wideRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillStyle = '#999999';
+                                ctx.fillText('⭐', x, y);
+                                ctx.restore();
+                            }
                         }
                         
-                        // Trophy for highest chin-up session
-                        if (session.isChinup && highestChinupSession &&
-                            session.count === highestChinupSession.count &&
-                            session.time === highestChinupSession.time &&
-                            date === highestChinupSession.date) {
-                            ctx.save();
-                            ctx.font = 'bold 12px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'top';
-                            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-                            ctx.shadowBlur = 8;
-                            ctx.fillText('🏆', x, y);
-                            ctx.restore();
+                        // Check for chin-up records
+                        if (session.isChinup) {
+                            // Current record - golden trophy
+                            if (matchesRecord(session, date, chinupRecords.current)) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                                ctx.shadowBlur = 8;
+                                ctx.fillText('🏆', x, y);
+                                ctx.restore();
+                            }
+                            // Previous records - gray star
+                            else if (chinupRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillStyle = '#999999';
+                                ctx.fillText('⭐', x, y);
+                                ctx.restore();
+                            }
                         }
                         
-                        // Trophy for highest pull-up session
-                        if (session.isPullup && highestPullupSession &&
-                            session.count === highestPullupSession.count &&
-                            session.time === highestPullupSession.time &&
-                            date === highestPullupSession.date) {
-                            ctx.save();
-                            ctx.font = 'bold 12px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'top';
-                            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-                            ctx.shadowBlur = 8;
-                            ctx.fillText('🏆', x, y);
-                            ctx.restore();
+                        // Check for pull-up records
+                        if (session.isPullup) {
+                            // Current record - golden trophy
+                            if (matchesRecord(session, date, pullupRecords.current)) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                                ctx.shadowBlur = 8;
+                                ctx.fillText('🏆', x, y);
+                                ctx.restore();
+                            }
+                            // Previous records - gray star
+                            else if (pullupRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillStyle = '#999999';
+                                ctx.fillText('⭐', x, y);
+                                ctx.restore();
+                            }
                         }
                         
-                        // Trophy for highest dips session
-                        if (session.isDips && highestDipsSession &&
-                            session.count === highestDipsSession.count &&
-                            session.time === highestDipsSession.time &&
-                            date === highestDipsSession.date) {
-                            ctx.save();
-                            ctx.font = 'bold 12px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'top';
-                            ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
-                            ctx.shadowBlur = 8;
-                            ctx.fillText('🏆', x, y);
-                            ctx.restore();
+                        // Check for dips records
+                        if (session.isDips) {
+                            // Current record - golden trophy
+                            if (matchesRecord(session, date, dipsRecords.current)) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                                ctx.shadowBlur = 8;
+                                ctx.fillText('🏆', x, y);
+                                ctx.restore();
+                            }
+                            // Previous records - gray star
+                            else if (dipsRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillStyle = '#999999';
+                                ctx.fillText('⭐', x, y);
+                                ctx.restore();
+                            }
                         }
                     }
                 });
@@ -823,17 +920,29 @@ function updateChessChart() {
         }
     });
     
-    // Find records for each mode
+    // Find records for each mode (current and previous)
     const records = {
-        '3m': { count: 0, date: '', time: '' },
-        '5m': { count: 0, date: '', time: '' },
-        's': { count: 0, date: '', time: '' },
-        'ps': { count: 0, date: '', time: '' }
+        '3m': { current: null, previous: [] },
+        '5m': { current: null, previous: [] },
+        's': { current: null, previous: [] },
+        'ps': { current: null, previous: [] }
     };
     
-    chessData.forEach(entry => {
-        if (entry.count > records[entry.mode].count) {
-            records[entry.mode] = {
+    // Sort chess data chronologically
+    const sortedChessData = [...chessData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedChessData.forEach(entry => {
+        const modeRecords = records[entry.mode];
+        const currentMax = modeRecords.current?.count || 0;
+        
+        if (entry.count > currentMax) {
+            // Current record becomes previous record
+            if (modeRecords.current) {
+                modeRecords.previous.push({...modeRecords.current});
+            }
+            modeRecords.current = {
                 count: entry.count,
                 date: entry.date,
                 time: entry.time
@@ -841,13 +950,23 @@ function updateChessChart() {
         }
     });
     
+    console.log('Chess records:', records);
+    
     // Trophy plugin for chess
     const chessTrophyPlugin = {
         id: 'chessTrophyPlugin',
         afterDatasetsDraw: function(chart) {
             const ctx = chart.ctx;
             
-            // Draw trophies for record sessions
+            // Helper function to check if session matches a record
+            const matchesRecord = (session, date, record) => {
+                return record &&
+                       session.count === record.count &&
+                       session.time === record.time &&
+                       date === record.date;
+            };
+            
+            // Draw trophies and stars for record sessions
             dates.forEach((date, dateIndex) => {
                 const sessions = dailyTotals[date].sessions;
                 sessions.forEach((session, sessionIndex) => {
@@ -857,10 +976,10 @@ function updateChessChart() {
                         const x = bar.x;
                         const y = bar.y + 8;
                         
-                        const record = records[session.mode];
-                        if (session.count === record.count &&
-                            session.time === record.time &&
-                            date === record.date) {
+                        const modeRecords = records[session.mode];
+                        
+                        // Current record - golden trophy
+                        if (matchesRecord(session, date, modeRecords.current)) {
                             ctx.save();
                             ctx.font = 'bold 12px Arial';
                             ctx.textAlign = 'center';
@@ -868,6 +987,16 @@ function updateChessChart() {
                             ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
                             ctx.shadowBlur = 8;
                             ctx.fillText('🏆', x, y);
+                            ctx.restore();
+                        }
+                        // Previous records - gray star
+                        else if (modeRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                            ctx.save();
+                            ctx.font = 'bold 12px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'top';
+                            ctx.fillStyle = '#999999';
+                            ctx.fillText('⭐', x, y);
                             ctx.restore();
                         }
                     }
