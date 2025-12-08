@@ -1,12 +1,16 @@
 // API endpoints
 const PULLUPS_API_ENDPOINT = '/api/pullups';
 const CHESS_API_ENDPOINT = '/api/chess';
+const PUSHUPS_API_ENDPOINT = '/api/pushups';
+const PUSHUPS_PREDATA_API_ENDPOINT = '/api/pushups/predata';
 
 // Global variables
 let pullupsChart = null;
 let chessChart = null;
+let pushupsChart = null;
 let pullupsData = [];
 let chessData = [];
+let pushupsData = [];
 let currentTab = 'pullups';
 
 // Parse the pullups data from the file content
@@ -74,6 +78,70 @@ function parseChessData(content) {
     return data;
 }
 
+// Parse pushups data
+function parsePushupsData(content) {
+    const lines = content.trim().split('\n');
+    const data = [];
+    
+    lines.forEach(line => {
+        // Match format: 2025-11-20 14:51:30 s 12
+        // types: s (standard), i (incline), d (decline), c (closed), w (wide)
+        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+([sidcw])\s+(\d+)/);
+        
+        if (match) {
+            const [, date, time, type, count] = match;
+            data.push({
+                date: date,
+                time: time,
+                datetime: `${date} ${time}`,
+                count: parseInt(count),
+                type: type,
+                isStandard: type === 's',
+                isIncline: type === 'i',
+                isDecline: type === 'd',
+                isClosed: type === 'c',
+                isWide: type === 'w'
+            });
+        }
+    });
+    
+    return data;
+}
+
+// Parse pushups predata
+function parsePushupsPredata(jsonContent) {
+    const data = [];
+    try {
+        const predata = JSON.parse(jsonContent);
+        Object.entries(predata).forEach(([date, count]) => {
+            // Only add if count > 0, or keep it anyway?
+            // User sample showed 0s. 0 usually means no data or rest day.
+            // But if we want to show it on the graph, maybe we only care about sessions > 0?
+            // Existing logic sums counts. If count is 0, it contributes nothing to total but might count as a session?
+            // Let's assume we include > 0 for sessions, unless user wants to track rest days explicitly.
+            // Usually graphs ignore 0 values.
+            if (count > 0) {
+                data.push({
+                    date: date,
+                    time: 'predata',
+                    datetime: `${date} 00:00:00`, // Sort order might be affected, but fine for older data
+                    count: parseInt(count),
+                    type: 's', // User said consider them standard
+                    isStandard: true,
+                    isIncline: false,
+                    isDecline: false,
+                    isClosed: false,
+                    isWide: false,
+                    isPredata: true
+                });
+            }
+        });
+    } catch (e) {
+        console.error('Error parsing pushups predata JSON:', e);
+    }
+    return data;
+}
+
 // Load pullups data from API
 async function loadPullupsData() {
     try {
@@ -114,6 +182,42 @@ async function loadChessData() {
         updateChessStatistics();
     } catch (error) {
         console.error('Error loading chess data:', error);
+    }
+}
+
+// Load pushups data from API
+async function loadPushupsData() {
+    try {
+        // Load recent data
+        const response = await fetch(PUSHUPS_API_ENDPOINT);
+        const content = await response.text();
+        const recentData = parsePushupsData(content);
+        
+        // Load predata
+        let predata = [];
+        try {
+            const predataResponse = await fetch(PUSHUPS_PREDATA_API_ENDPOINT);
+            if (predataResponse.ok) {
+                const predataContent = await predataResponse.text();
+                predata = parsePushupsPredata(predataContent);
+            } else {
+                console.log('Predata not found or error');
+            }
+        } catch (e) {
+            console.error('Error fetching predata:', e);
+        }
+        
+        // Combine data
+        pushupsData = [...predata, ...recentData];
+        
+        if (pushupsData.length === 0) {
+            console.log('No pushups data found, using empty state');
+        }
+        
+        updatePushupsChart();
+        updatePushupsStatistics();
+    } catch (error) {
+        console.error('Error loading pushups data:', error);
     }
 }
 
@@ -314,10 +418,34 @@ function findHighestDipsSession() {
     return { current: maxInfo, previous: previousRecords };
 }
 
+// Fill missing dates in daily totals with empty sessions
+function fillMissingDates(dailyTotals) {
+    const dates = Object.keys(dailyTotals).sort();
+    if (dates.length === 0) return [];
+    
+    const startDate = new Date(dates[0]);
+    const endDate = new Date(dates[dates.length - 1]);
+    const allDates = [];
+    
+    for (let d = new Date(startDate); d <= endDate; d.setUTCDate(d.getUTCDate() + 1)) {
+        const dateStr = d.toISOString().split('T')[0];
+        allDates.push(dateStr);
+        
+        if (!dailyTotals[dateStr]) {
+            dailyTotals[dateStr] = {
+                total: 0,
+                sessions: []
+            };
+        }
+    }
+    
+    return allDates;
+}
+
 // Update the pullups chart
 function updatePullupsChart() {
     const dailyTotals = getDailyTotals();
-    const dates = Object.keys(dailyTotals).sort();
+    const dates = fillMissingDates(dailyTotals);
     
     // Prepare datasets for the chart
     const dailyTotalsData = dates.map(date => dailyTotals[date].total);
@@ -572,6 +700,21 @@ function updatePullupsChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
+                    }
+                },
                 title: {
                     display: true,
                     text: 'Daily Pullups Progress',
@@ -629,6 +772,8 @@ function updatePullupsChart() {
             scales: {
                 x: {
                     stacked: true,
+                    min: dates.length > 30 ? dates.length - 30 : 0,
+                    max: dates.length - 1,
                     grid: {
                         display: false
                     },
@@ -859,7 +1004,7 @@ function getChessDailyTotals() {
 // Update the chess chart
 function updateChessChart() {
     const dailyTotals = getChessDailyTotals();
-    const dates = Object.keys(dailyTotals).sort();
+    const dates = fillMissingDates(dailyTotals);
     
     // Create individual session datasets
     const sessionDatasets = [];
@@ -1041,6 +1186,21 @@ function updateChessChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
+                    }
+                },
                 title: {
                     display: true,
                     text: 'Chess Puzzle Rush Progress',
@@ -1095,6 +1255,8 @@ function updateChessChart() {
             scales: {
                 x: {
                     stacked: true,
+                    min: dates.length > 30 ? dates.length - 30 : 0,
+                    max: dates.length - 1,
                     grid: {
                         display: false
                     },
@@ -1168,7 +1330,7 @@ function updateChessStatistics() {
     const currentWeek = getWeekNumber(today);
     const thisWeekTotal = weeklyTotals[currentWeek]?.total || 0;
     const thisWeekDates = weeklyTotals[currentWeek]?.dates || [];
-    const thisWeekRange = thisWeekDates.length > 0 
+    const thisWeekRange = thisWeekDates.length > 0
         ? `${thisWeekDates[0]} to ${thisWeekDates[thisWeekDates.length - 1]}`
         : currentWeek;
     
@@ -1272,6 +1434,434 @@ function updateChessStatistics() {
     document.querySelector('#chessPuzzleStormRecord').parentElement.setAttribute('data-tooltip', recordPuzzleStormDate || '');
 }
 
+// Pushups specific functions
+function getPushupsDailyTotals() {
+    const dailyTotals = {};
+    
+    pushupsData.forEach(entry => {
+        if (!dailyTotals[entry.date]) {
+            dailyTotals[entry.date] = {
+                total: 0,
+                sessions: []
+            };
+        }
+        dailyTotals[entry.date].total += entry.count;
+        dailyTotals[entry.date].sessions.push({
+            time: entry.time,
+            count: entry.count,
+            type: entry.type,
+            isStandard: entry.isStandard,
+            isIncline: entry.isIncline,
+            isDecline: entry.isDecline,
+            isClosed: entry.isClosed,
+            isWide: entry.isWide,
+            isPredata: entry.isPredata
+        });
+    });
+    
+    return dailyTotals;
+}
+
+// Update the pushups chart
+function updatePushupsChart() {
+    const dailyTotals = getPushupsDailyTotals();
+    const dates = fillMissingDates(dailyTotals);
+    
+    // Create individual session datasets
+    const sessionDatasets = [];
+    const maxSessionsPerDay = Math.max(...Object.values(dailyTotals).map(d => d.sessions.length), 0);
+    
+    // Define colors for different pushup types
+    const pushupTypeColors = {
+        standard: { bg: 'rgba(59, 130, 246, 0.7)', border: 'rgb(37, 99, 235)' },
+        incline: { bg: 'rgba(6, 182, 212, 0.7)', border: 'rgb(8, 145, 178)' },
+        decline: { bg: 'rgba(236, 72, 153, 0.7)', border: 'rgb(219, 39, 119)' },
+        closed: { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgb(22, 163, 74)' },
+        wide: { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(220, 38, 38)' }
+    };
+    
+    function getColorForPushupSession(session) {
+        if (session.isStandard) return pushupTypeColors.standard;
+        if (session.isIncline) return pushupTypeColors.incline;
+        if (session.isDecline) return pushupTypeColors.decline;
+        if (session.isClosed) return pushupTypeColors.closed;
+        if (session.isWide) return pushupTypeColors.wide;
+        return pushupTypeColors.standard;
+    }
+    
+    for (let i = 0; i < maxSessionsPerDay; i++) {
+        const sessionData = dates.map(date => {
+            const sessions = dailyTotals[date].sessions;
+            return sessions[i] ? sessions[i].count : null;
+        });
+        
+        const backgroundColors = dates.map(date => {
+            const sessions = dailyTotals[date].sessions;
+            if (sessions[i]) {
+                return getColorForPushupSession(sessions[i]).bg;
+            }
+            return 'rgba(200, 200, 200, 0.7)';
+        });
+        
+        const borderColors = dates.map(date => {
+            const sessions = dailyTotals[date].sessions;
+            if (sessions[i]) {
+                return getColorForPushupSession(sessions[i]).border;
+            }
+            return 'rgb(150, 150, 150)';
+        });
+        
+        sessionDatasets.push({
+            label: `Session ${i + 1}`,
+            data: sessionData,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 2,
+            borderRadius: 6,
+            stack: 'sessions'
+        });
+    }
+    
+    // Find highest day
+    let highestDayTotal = 0;
+    let highestDayIndex = -1;
+    dates.forEach((date, index) => {
+        if (dailyTotals[date].total > highestDayTotal) {
+            highestDayTotal = dailyTotals[date].total;
+            highestDayIndex = index;
+        }
+    });
+    
+    // Find records for each type
+    const records = {
+        's': { current: null, previous: [] },
+        'i': { current: null, previous: [] },
+        'd': { current: null, previous: [] },
+        'c': { current: null, previous: [] },
+        'w': { current: null, previous: [] }
+    };
+    
+    const sortedData = [...pushupsData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedData.forEach(entry => {
+        // Skip predata for records
+        if (entry.isPredata) return;
+
+        const typeRecords = records[entry.type];
+        // Skip if type is unknown
+        if (!typeRecords) return;
+
+        const currentMax = typeRecords.current?.count || 0;
+        
+        if (entry.count > currentMax) {
+            if (typeRecords.current) {
+                typeRecords.previous.push({...typeRecords.current});
+            }
+            typeRecords.current = {
+                count: entry.count,
+                date: entry.date,
+                time: entry.time
+            };
+        }
+    });
+    
+    // Trophy plugin
+    const pushupsTrophyPlugin = {
+        id: 'pushupsTrophyPlugin',
+        afterDatasetsDraw: function(chart) {
+            const ctx = chart.ctx;
+            const matchesRecord = (session, date, record) => {
+                return record &&
+                       session.count === record.count &&
+                       session.time === record.time &&
+                       date === record.date;
+            };
+            
+            dates.forEach((date, dateIndex) => {
+                const sessions = dailyTotals[date].sessions;
+                sessions.forEach((session, sessionIndex) => {
+                    const datasetMeta = chart.getDatasetMeta(sessionIndex);
+                    if (datasetMeta && datasetMeta.data[dateIndex]) {
+                        const bar = datasetMeta.data[dateIndex];
+                        const x = bar.x;
+                        const y = bar.y + 8;
+                        
+                        const typeRecords = records[session.type];
+                        if (typeRecords) {
+                             if (matchesRecord(session, date, typeRecords.current)) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                                ctx.shadowBlur = 8;
+                                ctx.fillText('🏆', x, y);
+                                ctx.restore();
+                            } else if (typeRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillStyle = '#999999';
+                                ctx.fillText('⭐', x, y);
+                                ctx.restore();
+                            }
+                        }
+                    }
+                });
+            });
+            
+            if (highestDayIndex >= 0) {
+                const xScale = chart.scales.x;
+                const yScale = chart.scales.y;
+                const xPos = xScale.getPixelForValue(highestDayIndex);
+                const yPos = yScale.bottom + 15;
+                
+                ctx.save();
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(255, 215, 0, 0.6)';
+                ctx.shadowBlur = 10;
+                ctx.fillText('🏆', xPos + 25, yPos);
+                ctx.restore();
+            }
+        }
+    };
+    
+    const ctx = document.getElementById('pushupsChart').getContext('2d');
+    
+    if (pushupsChart) {
+        pushupsChart.destroy();
+    }
+    
+    pushupsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dates.map(date => {
+                const d = new Date(date);
+                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }),
+            datasets: sessionDatasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x',
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Daily Pushups Progress',
+                    font: { size: 20, weight: 'bold' },
+                    padding: 20
+                },
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const dateIndex = context[0].dataIndex;
+                            return dates[dateIndex];
+                        },
+                        afterTitle: function(context) {
+                            const dateIndex = context[0].dataIndex;
+                            const date = dates[dateIndex];
+                            const total = dailyTotals[date].total;
+                            return `Daily Total: ${total} pushups`;
+                        },
+                        label: function(context) {
+                            const sessionNum = context.datasetIndex + 1;
+                            const count = context.parsed.y;
+                            if (count === null) return null;
+                            const dateIndex = context.dataIndex;
+                            const date = dates[dateIndex];
+                            const session = dailyTotals[date].sessions[context.datasetIndex];
+                            
+                            let type = 'Standard';
+                            if (session.isIncline) type = 'Incline';
+                            if (session.isDecline) type = 'Decline';
+                            if (session.isClosed) type = 'Closed';
+                            if (session.isWide) type = 'Wide';
+                            
+                            if (session.isPredata) {
+                                return `Day Total (Predata): ${count} ${type}`;
+                            }
+                            
+                            return `Session ${sessionNum} (${session.time}): ${count} ${type}`;
+                        }
+                    },
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    min: dates.length > 30 ? dates.length - 30 : 0,
+                    max: dates.length - 1,
+                    grid: { display: false },
+                    ticks: { font: { size: 12 } }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Pushups',
+                        font: { size: 14, weight: 'bold' }
+                    },
+                    ticks: { stepSize: 5, font: { size: 12 } },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                }
+            }
+        },
+        plugins: [pushupsTrophyPlugin]
+    });
+}
+
+function updatePushupsStatistics() {
+    const dailyTotals = getPushupsDailyTotals();
+    const dates = Object.keys(dailyTotals).sort();
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Today's total
+    const todayTotal = dailyTotals[today]?.total || 0;
+    document.getElementById('pushupsTodayTotal').textContent = todayTotal;
+    document.querySelector('#pushupsTodayTotal').parentElement.setAttribute('data-tooltip', today);
+    
+    // Highest day
+    let highestDay = 0;
+    let highestDayDate = '';
+    dates.forEach(date => {
+        if (dailyTotals[date].total > highestDay) {
+            highestDay = dailyTotals[date].total;
+            highestDayDate = date;
+        }
+    });
+    document.getElementById('pushupsHighestDay').textContent = highestDay;
+    document.querySelector('#pushupsHighestDay').parentElement.setAttribute('data-tooltip', highestDayDate);
+    
+    // Weekly totals
+    const weeklyTotals = {};
+    dates.forEach(date => {
+        const week = getWeekNumber(date);
+        if (!weeklyTotals[week]) weeklyTotals[week] = { total: 0, dates: [] };
+        weeklyTotals[week].total += dailyTotals[date].total;
+        weeklyTotals[week].dates.push(date);
+    });
+    
+    const currentWeek = getWeekNumber(today);
+    const thisWeekTotal = weeklyTotals[currentWeek]?.total || 0;
+    const thisWeekDates = weeklyTotals[currentWeek]?.dates || [];
+    const thisWeekRange = thisWeekDates.length > 0
+        ? `${thisWeekDates[0]} to ${thisWeekDates[thisWeekDates.length - 1]}`
+        : currentWeek;
+    
+    document.getElementById('pushupsThisWeek').textContent = thisWeekTotal;
+    document.querySelector('#pushupsThisWeek').parentElement.setAttribute('data-tooltip', thisWeekRange);
+    
+    // Highest Week
+    let highestWeek = 0;
+    let highestWeekKey = '';
+    Object.entries(weeklyTotals).forEach(([week, data]) => {
+        if (data.total > highestWeek) {
+            highestWeek = data.total;
+            highestWeekKey = week;
+        }
+    });
+    const highestWeekDates = weeklyTotals[highestWeekKey]?.dates || [];
+    const highestWeekRange = highestWeekDates.length > 0
+        ? `${highestWeekDates[0]} to ${highestWeekDates[highestWeekDates.length - 1]}`
+        : highestWeekKey;
+    document.getElementById('pushupsHighestWeek').textContent = highestWeek;
+    document.querySelector('#pushupsHighestWeek').parentElement.setAttribute('data-tooltip', highestWeekRange);
+    
+    // Monthly totals
+    const monthlyTotals = {};
+    dates.forEach(date => {
+        const month = getMonth(date);
+        if (!monthlyTotals[month]) monthlyTotals[month] = { total: 0, dates: [] };
+        monthlyTotals[month].total += dailyTotals[date].total;
+        monthlyTotals[month].dates.push(date);
+    });
+    
+    const currentMonth = getMonth(today);
+    const thisMonthTotal = monthlyTotals[currentMonth]?.total || 0;
+    const thisMonthDates = monthlyTotals[currentMonth]?.dates || [];
+    const thisMonthRange = thisMonthDates.length > 0
+        ? `${thisMonthDates[0]} to ${thisMonthDates[thisMonthDates.length - 1]}`
+        : currentMonth;
+    document.getElementById('pushupsThisMonth').textContent = thisMonthTotal;
+    document.querySelector('#pushupsThisMonth').parentElement.setAttribute('data-tooltip', thisMonthRange);
+    
+    // Highest Month
+    let highestMonth = 0;
+    let highestMonthKey = '';
+    Object.entries(monthlyTotals).forEach(([month, data]) => {
+        if (data.total > highestMonth) {
+            highestMonth = data.total;
+            highestMonthKey = month;
+        }
+    });
+    const highestMonthDates = monthlyTotals[highestMonthKey]?.dates || [];
+    const highestMonthRange = highestMonthDates.length > 0
+        ? `${highestMonthDates[0]} to ${highestMonthDates[highestMonthDates.length - 1]}`
+        : highestMonthKey;
+    document.getElementById('pushupsHighestMonth').textContent = highestMonth;
+    document.querySelector('#pushupsHighestMonth').parentElement.setAttribute('data-tooltip', highestMonthRange);
+    
+    // Records
+    let records = {
+        s: { count: 0, date: '' },
+        i: { count: 0, date: '' },
+        d: { count: 0, date: '' },
+        c: { count: 0, date: '' },
+        w: { count: 0, date: '' }
+    };
+    
+    pushupsData.forEach(entry => {
+        // Skip predata for records
+        if (entry.isPredata) return;
+        
+        if (records[entry.type] && entry.count > records[entry.type].count) {
+            records[entry.type].count = entry.count;
+            records[entry.type].date = entry.datetime;
+        }
+    });
+    
+    document.getElementById('pushupsStandardRecord').textContent = records.s.count || '-';
+    document.querySelector('#pushupsStandardRecord').parentElement.setAttribute('data-tooltip', records.s.date || '');
+    
+    document.getElementById('pushupsInclineRecord').textContent = records.i.count || '-';
+    document.querySelector('#pushupsInclineRecord').parentElement.setAttribute('data-tooltip', records.i.date || '');
+    
+    document.getElementById('pushupsDeclineRecord').textContent = records.d.count || '-';
+    document.querySelector('#pushupsDeclineRecord').parentElement.setAttribute('data-tooltip', records.d.date || '');
+    
+    document.getElementById('pushupsClosedRecord').textContent = records.c.count || '-';
+    document.querySelector('#pushupsClosedRecord').parentElement.setAttribute('data-tooltip', records.c.date || '');
+    
+    document.getElementById('pushupsWideRecord').textContent = records.w.count || '-';
+    document.querySelector('#pushupsWideRecord').parentElement.setAttribute('data-tooltip', records.w.date || '');
+}
+
 // Tab switching functionality
 function switchTab(tabName) {
     currentTab = tabName;
@@ -1286,14 +1876,40 @@ function switchTab(tabName) {
     
     // Update content visibility
     document.getElementById('pullups-content').classList.toggle('hidden', tabName !== 'pullups');
+    document.getElementById('pushups-content').classList.toggle('hidden', tabName !== 'pushups');
     document.getElementById('chess-content').classList.toggle('hidden', tabName !== 'chess');
     
     // Update subtitle
     const subtitle = document.getElementById('subtitle');
     if (tabName === 'pullups') {
         subtitle.textContent = 'Track your daily pullup sessions and progress';
+    } else if (tabName === 'pushups') {
+        subtitle.textContent = 'Track your daily pushup sessions and progress';
     } else {
         subtitle.textContent = 'Track your chess puzzle rush performance';
+    }
+}
+
+// Zoom control functions
+function zoomChart(chartType, factor) {
+    let chart;
+    if (chartType === 'pullups') chart = pullupsChart;
+    else if (chartType === 'chess') chart = chessChart;
+    else if (chartType === 'pushups') chart = pushupsChart;
+    
+    if (chart) {
+        chart.zoom(factor);
+    }
+}
+
+function resetChartZoom(chartType) {
+    let chart;
+    if (chartType === 'pullups') chart = pullupsChart;
+    else if (chartType === 'chess') chart = chessChart;
+    else if (chartType === 'pushups') chart = pushupsChart;
+    
+    if (chart) {
+        chart.resetZoom();
     }
 }
 
@@ -1301,6 +1917,7 @@ function switchTab(tabName) {
 document.addEventListener('DOMContentLoaded', () => {
     loadPullupsData();
     loadChessData();
+    loadPushupsData();
     
     // Setup tab switching
     document.querySelectorAll('.tab-button').forEach(btn => {

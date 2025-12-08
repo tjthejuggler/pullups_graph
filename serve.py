@@ -12,6 +12,8 @@ from urllib.parse import urlparse, parse_qs
 PORT = 8000
 PULLUPS_FILE = '/home/twain/noteVault/Pullups.md'
 CHESS_FILE = '/home/twain/noteVault/PuzzleRushApnea.md'
+PUSHUPS_FILE = '/home/twain/noteVault/Pushups.md'
+PUSHUPS_PREDATA_FILE = '/home/twain/noteVault/pushups_predata.json'
 
 class PullupsHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -62,6 +64,46 @@ class PullupsHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-type', 'text/plain')
                 self.end_headers()
                 self.wfile.write(f'Error reading file: {str(e)}'.encode())
+        # Check if requesting the pushups data
+        elif self.path == '/api/pushups':
+            try:
+                with open(PUSHUPS_FILE, 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(content.encode())
+            except FileNotFoundError:
+                self.send_response(404)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'Pushups.md file not found')
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(f'Error reading file: {str(e)}'.encode())
+        # Check if requesting the pushups predata
+        elif self.path == '/api/pushups/predata':
+            try:
+                with open(PUSHUPS_PREDATA_FILE, 'r') as f:
+                    content = f.read()
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(content.encode())
+            except FileNotFoundError:
+                self.send_response(404)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(b'pushups_predata.json file not found')
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(f'Error reading file: {str(e)}'.encode())
         else:
             # Serve regular files
             super().do_GET()
@@ -75,6 +117,8 @@ if __name__ == '__main__':
         print(f"🚀 Progress Tracker Server running at http://localhost:{PORT}")
         print(f"📊 Reading pullups data from: {PULLUPS_FILE}")
         print(f"♟️  Reading chess data from: {CHESS_FILE}")
+        print(f"💪 Reading pushups data from: {PUSHUPS_FILE}")
+        print(f"📜 Reading pushups predata from: {PUSHUPS_PREDATA_FILE}")
         print(f"Press Ctrl+C to stop the server")
         try:
             httpd.serve_forever()
