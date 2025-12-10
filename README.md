@@ -18,6 +18,7 @@ This application now features **two separate tracking tabs**:
   - **Chin-ups** ('c' suffix): Green bars
   - **Pull-ups** ('p' suffix): Orange bars
   - **Dips** ('d' suffix): Purple bars
+  - **Neutral-grip pullups** ('n' suffix): Blue Grey bars
   - Best session for each exercise type gets its own trophy 🏆 on the chart
   - All exercise types count toward daily/weekly/monthly totals
   - Separate statistics tracked for each exercise type
@@ -35,6 +36,7 @@ This application now features **two separate tracking tabs**:
     - Best chin-up session (green background)
     - Best pull-up session (orange background)
     - Best dips session (purple background)
+    - Best neutral session (blue-grey background)
 - **Hover Tooltips**: Hover over any stat card to see the exact date or date range
 - **Responsive Design**: Works beautifully on desktop and mobile devices
 - **Auto-Updates**: Reads the latest data from your Pullups.md file each time you load the page
@@ -121,6 +123,7 @@ Each line represents:
   - `c` = chin-ups (e.g., `5c` means 5 chin-ups)
   - `p` = pull-ups (e.g., `8p` means 8 pull-ups)
   - `d` = dips (e.g., `6d` means 6 dips)
+  - `n` = neutral-grip pullups (e.g., `5n` means 5 neutral pullups)
 
 ### Exercise Types
 
@@ -154,6 +157,13 @@ All exercise types are tracked separately but still count toward your daily, wee
 - Parallel bar dips
 - Emphasizes triceps, chest, and shoulders
 
+**Neutral-grip pullups (n):**
+```
+2025-11-27 16:00:00 > 5n
+```
+- Palms facing each other
+- Emphasizes brachialis and forearms
+
 Each exercise type will:
 - Count toward your daily/weekly/monthly totals
 - Display with a distinct color on the graph:
@@ -161,6 +171,7 @@ Each exercise type will:
   - Chin-ups: Green
   - Pull-ups: Orange
   - Dips: Purple
+  - Neutral: Blue Grey
 - Track separately for "Best [Type] Session" statistics
 - Display a trophy 🏆 on the chart if it's your current record for that exercise type
 
@@ -246,6 +257,7 @@ Each card is color-coded to match the chart colors, serving as both a legend and
 - **Best Chin-up** (Green): The single chin-up session with the most pullups
 - **Best Pull-up** (Orange): The single pull-up session with the most pullups
 - **Best Dips** (Purple): The single dips session with the most reps
+- **Best Neutral** (Blue Grey): The single neutral-grip session with the most pullups
 
 ### Chess Statistics Explained
 
@@ -303,6 +315,12 @@ To bind the script to a hotkey in your desktop environment:
 - 🏆 Trophy system for puzzle storm records
 - 📊 Puzzle storm counts toward daily/weekly/monthly totals
 
+### 2025-12-10 10:00 UTC
+- ✨ Added Neutral-grip pullups exercise tracking
+- 🔵 Blue Grey color scheme for neutral pullups in chart and statistics
+- 🏆 Trophy system for neutral pullups records
+- 📊 Neutral pullups count toward daily/weekly/monthly totals
+
 ### 2025-11-28 20:46 UTC
 - ✨ Added Dips exercise tracking
 - 💜 Purple color scheme for dips in chart and statistics
@@ -322,4 +340,4 @@ To bind the script to a hotkey in your desktop environment:
 
 ---
 
-*Last updated: 2025-12-01 11:02 UTC*
+*Last updated: 2025-12-10 10:00 UTC*

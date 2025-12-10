@@ -165,6 +165,11 @@ header h1 {
     border: 2px solid rgb(168, 85, 247);
 }
 
+.stat-card.type-neutral {
+    background: linear-gradient(135deg, rgba(96, 125, 139, 0.2) 0%, rgba(71, 85, 105, 0.3) 100%);
+    border: 2px solid rgb(96, 125, 139);
+}
+
 /* Pushup types */
 .stat-card.type-standard {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);

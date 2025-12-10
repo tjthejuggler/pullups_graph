@@ -19,8 +19,8 @@ function parsePullupsData(content) {
     const data = [];
     
     lines.forEach(line => {
-        // Match regular, wide pullups (w suffix), chin-ups (c suffix), pull-ups (p suffix), and dips (d suffix)
-        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+>\s+(\d+)([wcpd])?/);
+        // Match regular, wide pullups (w suffix), chin-ups (c suffix), pull-ups (p suffix), dips (d suffix), and neutral (n suffix)
+        const match = line.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\s+>\s+(\d+)([wcpdn])?/);
         if (match) {
             const [, date, time, count, suffix] = match;
             data.push({
@@ -31,7 +31,8 @@ function parsePullupsData(content) {
                 isWide: suffix === 'w',
                 isChinup: suffix === 'c',
                 isPullup: suffix === 'p',
-                isDips: suffix === 'd'
+                isDips: suffix === 'd',
+                isNeutral: suffix === 'n'
             });
         }
     });
@@ -224,20 +225,20 @@ async function loadPushupsData() {
 // Use sample data for demonstration
 function useSampleData() {
     pullupsData = [
-        { date: '2025-11-20', time: '14:51:30', datetime: '2025-11-20 14:51:30', count: 5, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-20', time: '18:51:34', datetime: '2025-11-20 18:51:34', count: 5, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-21', time: '18:51:34', datetime: '2025-11-21 18:51:34', count: 6, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-22', time: '12:20:54', datetime: '2025-11-22 12:20:54', count: 6, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-23', time: '17:52:43', datetime: '2025-11-23 17:52:43', count: 8, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-24', time: '12:13:07', datetime: '2025-11-24 12:13:07', count: 7, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-25', time: '12:31:25', datetime: '2025-11-25 12:31:25', count: 7, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-25', time: '15:01:27', datetime: '2025-11-25 15:01:27', count: 7, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-25', time: '18:51:19', datetime: '2025-11-25 18:51:19', count: 6, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-26', time: '11:55:47', datetime: '2025-11-26 11:55:47', count: 6, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-26', time: '11:59:36', datetime: '2025-11-26 11:59:36', count: 6, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-26', time: '14:09:50', datetime: '2025-11-26 14:09:50', count: 6, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-26', time: '14:37:38', datetime: '2025-11-26 14:37:38', count: 5, isWide: false, isChinup: false, isPullup: false },
-        { date: '2025-11-26', time: '15:36:45', datetime: '2025-11-26 15:36:45', count: 5, isWide: false, isChinup: false, isPullup: false }
+        { date: '2025-11-20', time: '14:51:30', datetime: '2025-11-20 14:51:30', count: 5, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-20', time: '18:51:34', datetime: '2025-11-20 18:51:34', count: 5, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-21', time: '18:51:34', datetime: '2025-11-21 18:51:34', count: 6, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-22', time: '12:20:54', datetime: '2025-11-22 12:20:54', count: 6, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-23', time: '17:52:43', datetime: '2025-11-23 17:52:43', count: 8, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-24', time: '12:13:07', datetime: '2025-11-24 12:13:07', count: 7, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-25', time: '12:31:25', datetime: '2025-11-25 12:31:25', count: 7, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-25', time: '15:01:27', datetime: '2025-11-25 15:01:27', count: 7, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-25', time: '18:51:19', datetime: '2025-11-25 18:51:19', count: 6, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-26', time: '11:55:47', datetime: '2025-11-26 11:55:47', count: 6, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-26', time: '11:59:36', datetime: '2025-11-26 11:59:36', count: 6, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-26', time: '14:09:50', datetime: '2025-11-26 14:09:50', count: 6, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-26', time: '14:37:38', datetime: '2025-11-26 14:37:38', count: 5, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false },
+        { date: '2025-11-26', time: '15:36:45', datetime: '2025-11-26 15:36:45', count: 5, isWide: false, isChinup: false, isPullup: false, isDips: false, isNeutral: false }
     ];
     
     updatePullupsChart();
@@ -262,7 +263,8 @@ function getDailyTotals() {
             isWide: entry.isWide,
             isChinup: entry.isChinup,
             isPullup: entry.isPullup,
-            isDips: entry.isDips
+            isDips: entry.isDips,
+            isNeutral: entry.isNeutral
         });
     });
     
@@ -418,6 +420,39 @@ function findHighestDipsSession() {
     return { current: maxInfo, previous: previousRecords };
 }
 
+// Find the highest neutral session and all previous records
+function findHighestNeutralSession() {
+    let maxCount = 0;
+    let maxInfo = null;
+    const previousRecords = [];
+    
+    // Sort by datetime to process chronologically
+    const sortedData = [...pullupsData].sort((a, b) => {
+        return new Date(a.datetime) - new Date(b.datetime);
+    });
+    
+    sortedData.forEach((entry, index) => {
+        if (entry.isNeutral) {
+            if (entry.count > maxCount) {
+                // Current record becomes previous record
+                if (maxInfo) {
+                    previousRecords.push({...maxInfo});
+                }
+                maxCount = entry.count;
+                maxInfo = {
+                    count: entry.count,
+                    date: entry.date,
+                    time: entry.time,
+                    index: index,
+                    isNeutral: true
+                };
+            }
+        }
+    });
+    
+    return { current: maxInfo, previous: previousRecords };
+}
+
 // Fill missing dates in daily totals with empty sessions
 function fillMissingDates(dailyTotals) {
     const dates = Object.keys(dailyTotals).sort();
@@ -460,7 +495,8 @@ function updatePullupsChart() {
         wide: { bg: 'rgba(239, 68, 68, 0.7)', border: 'rgb(220, 38, 38)' },        // red for wide
         chinup: { bg: 'rgba(34, 197, 94, 0.7)', border: 'rgb(22, 163, 74)' },      // green for chin-ups
         pullup: { bg: 'rgba(249, 115, 22, 0.7)', border: 'rgb(234, 88, 12)' },     // orange for pull-ups
-        dips: { bg: 'rgba(168, 85, 247, 0.7)', border: 'rgb(147, 51, 234)' }       // purple for dips
+        dips: { bg: 'rgba(168, 85, 247, 0.7)', border: 'rgb(147, 51, 234)' },      // purple for dips
+        neutral: { bg: 'rgba(96, 125, 139, 0.7)', border: 'rgb(96, 125, 139)' }    // blue grey for neutral
     };
     
     // Function to get color based on pullup type
@@ -473,6 +509,8 @@ function updatePullupsChart() {
             return pullupTypeColors.pullup;
         } else if (session.isDips) {
             return pullupTypeColors.dips;
+        } else if (session.isNeutral) {
+            return pullupTypeColors.neutral;
         } else {
             return pullupTypeColors.regular;
         }
@@ -527,6 +565,7 @@ function updatePullupsChart() {
     const chinupRecords = findHighestChinupSession();
     const pullupRecords = findHighestPullupSession();
     const dipsRecords = findHighestDipsSession();
+    const neutralRecords = findHighestNeutralSession();
     
     // Trophy plugin to draw trophy on highest session, highest day, and grip type trophies
     const trophyPlugin = {
@@ -651,6 +690,31 @@ function updatePullupsChart() {
                                 ctx.restore();
                             }
                         }
+
+                        // Check for neutral records
+                        if (session.isNeutral) {
+                            // Current record - golden trophy
+                            if (matchesRecord(session, date, neutralRecords.current)) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+                                ctx.shadowBlur = 8;
+                                ctx.fillText('🏆', x, y);
+                                ctx.restore();
+                            }
+                            // Previous records - gray star
+                            else if (neutralRecords.previous.some(rec => matchesRecord(session, date, rec))) {
+                                ctx.save();
+                                ctx.font = 'bold 12px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillStyle = '#999999';
+                                ctx.fillText('⭐', x, y);
+                                ctx.restore();
+                            }
+                        }
                     }
                 });
             });
@@ -754,6 +818,7 @@ function updatePullupsChart() {
                             else if (session.isChinup) type = 'Chin-up';
                             else if (session.isPullup) type = 'Pull-up';
                             else if (session.isDips) type = 'Dips';
+                            else if (session.isNeutral) type = 'Neutral';
                             
                             return `Session ${sessionNum} (${time}): ${count} ${type}`;
                         }
@@ -967,6 +1032,21 @@ function updatePullupsStatistics() {
     if (dipsSessionElement) {
         dipsSessionElement.textContent = highestDipsSession || '-';
         dipsSessionElement.parentElement.setAttribute('data-tooltip', highestDipsSessionDate || '');
+    }
+
+    // Highest neutral session
+    let highestNeutralSession = 0;
+    let highestNeutralSessionDate = '';
+    pullupsData.forEach(entry => {
+        if (entry.isNeutral && entry.count > highestNeutralSession) {
+            highestNeutralSession = entry.count;
+            highestNeutralSessionDate = entry.datetime;
+        }
+    });
+    const neutralSessionElement = document.getElementById('highestNeutralSession');
+    if (neutralSessionElement) {
+        neutralSessionElement.textContent = highestNeutralSession || '-';
+        neutralSessionElement.parentElement.setAttribute('data-tooltip', highestNeutralSessionDate || '');
     }
 }
 
